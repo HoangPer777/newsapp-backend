@@ -1,0 +1,55 @@
+services:
+  # Spring Boot Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: newsapp-app
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://newsapp-pg:5432/newsapp
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  db:
+    image: postgres:16
+    container_name: newsapp-pg
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-newsapp}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro   # (tuỳ chọn) script init ban đầu
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # pgAdmin (tuỳ chọn) để xem DB qua web
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: newsapp-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com # http://localhost:5050
+      PGADMIN_DEFAULT_PASSWORD: admin
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
