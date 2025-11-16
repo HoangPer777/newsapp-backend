@@ -32,22 +32,34 @@ public class SecurityConfig {
   }
 
   @Bean
-  SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-      .csrf(csrf -> csrf.disable())
-      .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/health/**", 
-                          "/actuator/**",
-                          "/auth/**", 
-                          "/v3/api-docs/**", 
-                          "/swagger-ui/**", 
-                          "/swagger-ui.html").permitAll()
-        .requestMatchers(HttpMethod.GET, "/articles/**", "/categories/**", "/search/**").permitAll()
-        .anyRequest().authenticated()
-      )
-      .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-      .cors(Customizer.withDefaults());
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.csrf(csrf -> csrf.disable())
+        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+          // Cho phép public bắt buộc
+          .requestMatchers(
+              "/actuator/**",
+              "/v3/api-docs/**",
+              "/swagger-ui/**",
+              "/swagger-ui.html",
+              "/auth/**"
+          ).permitAll()
+
+          // Cho phép article GET không cần login
+          // Note: include both "/api/articles" and "/api/articles/**" because
+          // "/api/articles/**" may not match the exact "/api/articles" path depending
+          // on matcher behaviour; explicitly listing both avoids 403 for root list.
+          .requestMatchers(HttpMethod.GET, "/api/articles", "/api/articles/**").permitAll()
+
+          // Nhưng POST /api/articles phải có JWT
+          .requestMatchers(HttpMethod.POST, "/api/articles").authenticated()
+
+          // Các route khác yêu cầu JWT
+          .anyRequest().authenticated()
+        )
+        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+        .cors(Customizer.withDefaults());
+
     return http.build();
   }
 }

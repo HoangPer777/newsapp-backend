@@ -1,18 +1,18 @@
 package com.example.newsapp.modules.article.repository;
 
 import com.example.newsapp.modules.article.entity.Article;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
 
+@Repository
 public interface ArticleRepository extends JpaRepository<Article, Long> {
+  List<Article> findTop20ByOrderByCreatedAtDesc();
 
-  @Query(value = """
-      SELECT * FROM articles
-      WHERE tsv @@ plainto_tsquery('simple', unaccent(:q))
-      ORDER BY ts_rank_cd(tsv, plainto_tsquery('simple', unaccent(:q))) DESC
-      """,
-      countQuery = "SELECT count(*) FROM articles WHERE tsv @@ plainto_tsquery('simple', unaccent(:q))",
-      nativeQuery = true)
-  Page<Article> search(@Param("q") String q, Pageable pageable);
+  List<Article> findTop20ByOrderByViewCountDesc();
+
+  List<Article> findByCategoryOrderByCreatedAtDesc(String category);
+
+  List<Article> findByTitleContainingIgnoreCase(String keyword);
+  
 }
