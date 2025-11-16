@@ -92,7 +92,8 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     needs: [test, build]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.DOCKER_USERNAME != ''
+    # ✅ Đơn giản hơn: chỉ chạy khi push vào main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
     - uses: actions/checkout@v4
