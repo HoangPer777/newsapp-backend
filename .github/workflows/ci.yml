@@ -9,6 +9,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     
     services:
       postgres:
@@ -58,6 +62,8 @@ jobs:
         name: Maven Tests
         path: newsapp/target/surefire-reports/*.xml
         reporter: java-junit
+        list-suites: all
+        list-tests: all
 
   build:
     runs-on: ubuntu-latest
