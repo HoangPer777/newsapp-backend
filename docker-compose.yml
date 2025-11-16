@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile
     container_name: newsapp-app
     environment:
+      # Use the 'postgres' Spring profile so Flyway migrations in
+      # application-postgres.yml are applied (adds columns expected by JPA)
       SPRING_PROFILES_ACTIVE: postgres
       SPRING_DATASOURCE_URL: jdbc:postgresql://newsapp-pg:5432/newsapp
       SPRING_DATASOURCE_USERNAME: postgres

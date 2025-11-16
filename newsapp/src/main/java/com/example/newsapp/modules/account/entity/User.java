@@ -5,7 +5,10 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity @Table(name="users")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter 
+@Setter 
+@NoArgsConstructor 
+@Builder
 public class User {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY) 
   private Long id;
@@ -17,5 +20,22 @@ public class User {
   private String passwordHash;
 
   private String displayName;
-  @Column(nullable=false) private Instant createdAt = Instant.now();
+  
+  @Column(nullable=false)
+  private Instant createdAt;
+
+  public User(Long id, String email, String passwordHash, String displayName, Instant createdAt) {
+    this.id = id;
+    this.email = email;
+    this.passwordHash = passwordHash;
+    this.displayName = displayName;
+    this.createdAt = createdAt;
+  }
+
+  @PrePersist
+  protected void onCreate() {
+    if (createdAt == null) {
+      createdAt = Instant.now();
+    }
+  }
 }

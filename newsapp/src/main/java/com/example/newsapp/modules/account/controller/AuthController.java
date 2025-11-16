@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-@RestController @RequestMapping("/auth")
+@RestController 
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
   private final UserRepository users;
@@ -25,9 +26,12 @@ public class AuthController {
   @PostMapping("/register")
   public Map<String,String> register(@RequestBody RegisterReq req){
     if (users.existsByEmail(req.email)) throw new RuntimeException("Email exists");
-    var user = users.save(User.builder()
-      .email(req.email).passwordHash(encoder.encode(req.password))
-      .displayName(req.displayName).build());
+    var user = new User();
+    user.setEmail(req.email);
+    user.setPasswordHash(encoder.encode(req.password));
+    user.setDisplayName(req.displayName);
+    user.setCreatedAt(java.time.Instant.now());
+    user = users.save(user);
     String token = jwt.generateAccessToken(user.getEmail(), Map.of("uid", user.getId()));
     return Map.of("accessToken", token);
   }
