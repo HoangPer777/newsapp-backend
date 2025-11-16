@@ -14,5 +14,6 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
   List<Article> findByCategoryOrderByCreatedAtDesc(String category);
 
   List<Article> findByTitleContainingIgnoreCase(String keyword);
+  boolean existsBySlug(String slug);
   
 }
