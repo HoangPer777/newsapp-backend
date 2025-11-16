@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # Spring Boot Application with Hot Reload
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: newsapp-app-dev
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://newsapp-pg:5432/newsapp
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount source code for hot reload
+      - ./newsapp/src:/app/src:cached
+      - ./newsapp/pom.xml:/app/pom.xml:cached
+      # Maven cache to speed up builds
+      - ~/.m2:/root/.m2:cached
+      # Exclude target folder from mount
+      - /app/target
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - newsapp-network
+    # Keep container running for debugging
+    stdin_open: true
+    tty: true
+
+  # PostgreSQL Database
+  db:
+    image: postgres:16
+    container_name: newsapp-pg
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-newsapp}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - newsapp-network
+    restart: unless-stopped
+
+  # pgAdmin for Database Management
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: newsapp-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - newsapp-network
+
+volumes:
+  pgdata:
+
+networks:
+  newsapp-network:
+    driver: bridge
