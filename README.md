@@ -7,7 +7,7 @@ Backend cho News App, xây dựng bằng Spring Boot 3, PostgreSQL, Docker Compo
 - Docker Desktop (Windows/Mac/Linux)
 - Maven (tùy chọn nếu muốn build JAR ngoài Docker)
 
-## Chạy nhanh với Docker (khuyến nghị)
+## Chạy nhanh với Docker (Nếu chưa chia dev area)
 ```bash
 # Khởi động toàn bộ stack
 docker compose up -d
@@ -20,6 +20,64 @@ docker logs -f newsapp-app
 
 # Kiểm tra health
 curl -i http://localhost:8080/actuator/health
+```
+
+## Chạy Docker (Khi chia dev area)
+
+### Dev area
+```bash
+# Lần đầu tiên (khởi động máy):
+docker-compose -f docker-compose.dev.yml up --build
+
+# Lần sau (khởi động lại máy):
+docker-compose -f docker-compose.dev.yml up
+
+# Thay đổi code java thì chỉ cần save file → Spring Boot DevTools tự reload trong 2-3 giây để xem thay đổi
+
+# Thay đổi pom.xml (dependency):
+docker-compose -f docker-compose.dev.yml up --build
+
+# Hết code (Để đóng compose)
+docker-compose -f docker-compose.dev.yml down
+```
+
+#### Mỗi lần pull code mới từ Git:
+```bash
+git pull origin main
+
+# Nếu chỉ thay đổi Java code
+docker-compose -f docker-compose.dev.yml up
+
+# Nếu thay đổi pom.xml
+docker-compose -f docker-compose.dev.yml up --build
+
+# Nếu thay đổi Dockerfile
+docker-compose -f docker-compose.dev.yml up --build
+```
+
+### Production area
+```bash
+# Clone repo
+git clone ....
+cd newsapp-backend
+
+# Chạy production (build JAR first nếu chưa có)
+mvn clean package -DskipTests
+
+# Deploy
+docker-compose -f docker-compose.yml up -d
+
+# Mỗi lần pull code mới từ Git:
+git pull origin main
+
+# Nếu chỉ thay đổi Java code
+docker-compose -f docker-compose.dev.yml up
+
+# Nếu thay đổi pom.xml
+docker-compose -f docker-compose.dev.yml up --build
+
+# Nếu thay đổi Dockerfile
+docker-compose -f docker-compose.dev.yml up --build
 ```
 
 ### Dịch vụ trong docker-compose
