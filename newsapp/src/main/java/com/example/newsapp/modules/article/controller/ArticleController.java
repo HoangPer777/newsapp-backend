@@ -14,9 +14,27 @@ public class ArticleController {
                                  @RequestParam(defaultValue="10") int size){
     return repo.findAll(PageRequest.of(page, size));
   }
+//    @GetMapping("/{slug}")
+//    public Object get(@PathVariable String slug) {
+//        return repo.findBySlug(slug)
+//                .orElseThrow();
+//    }
+@GetMapping("/{value}")
+public Object get(@PathVariable String value) {
+    try {
+        Long id = Long.parseLong(value);
+        return repo.findById(id).orElseThrow();
+    } catch (NumberFormatException e) {
+        return repo.findBySlug(value).orElseThrow();
+    }
+}
 
-  @GetMapping("/{id}") public Object get(@PathVariable Long id){ return repo.findById(id).orElseThrow(); }
-
+//  @GetMapping("/{id}") public Object get(@PathVariable Long id){ return repo.findById(id).orElseThrow(); }
+//@GetMapping("/{id}")
+//public Object get(@PathVariable Long id){
+//    return repo.findById(id)
+//            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Article not found"));
+//}
   @GetMapping("/search")
   public Object search(@RequestParam String q,
                        @RequestParam(defaultValue="0") int page,

@@ -13,5 +13,7 @@ public class Article {
   @Column(nullable=false, unique=true) private String slug;
   @ManyToOne(optional=false) @JoinColumn(name="author_id") private User author;
   @Column(nullable=false, columnDefinition="text") private String contentPlain;
+    @Column(name = "image_url") // Khớp tên cột trong DB
+    private String imageUrl;
   private Instant publishedAt;
 }

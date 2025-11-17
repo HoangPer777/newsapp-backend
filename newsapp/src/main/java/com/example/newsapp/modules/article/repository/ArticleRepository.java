@@ -4,6 +4,7 @@ import com.example.newsapp.modules.article.entity.Article;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
+import java.util.Optional;
 
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
@@ -15,4 +16,6 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
       countQuery = "SELECT count(*) FROM articles WHERE tsv @@ plainto_tsquery('simple', unaccent(:q))",
       nativeQuery = true)
   Page<Article> search(@Param("q") String q, Pageable pageable);
+
+    Optional<Article> findBySlug(String slug);
 }
