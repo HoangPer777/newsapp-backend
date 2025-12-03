@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
-@RestController @RequestMapping("/articles")
+@RestController @RequestMapping("/api/articles")
 @RequiredArgsConstructor
 public class ArticleController {
   private final ArticleRepository repo;
@@ -31,7 +31,7 @@ public Object get(@PathVariable String value) {
 //    public Article createArticle(@RequestBody Article article) {
 //        return articleService.createArticle(article);
 //    }
-    
+
   @GetMapping("/search")
   public Object search(@RequestParam String q,
                        @RequestParam(defaultValue="0") int page,
