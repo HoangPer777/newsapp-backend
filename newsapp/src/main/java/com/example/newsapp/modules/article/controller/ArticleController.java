@@ -1,5 +1,6 @@
 package com.example.newsapp.modules.article.controller;
 
+import com.example.newsapp.modules.article.entity.Article;
 import com.example.newsapp.modules.article.repository.ArticleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +26,12 @@ public Object get(@PathVariable String value) {
         return repo.findBySlug(value).orElseThrow();
     }
 }
-//
+//    // ========== THÊM BÀI VIẾT (nếu có admin) ==========
+//    @PostMapping
+//    public Article createArticle(@RequestBody Article article) {
+//        return articleService.createArticle(article);
+//    }
+    
   @GetMapping("/search")
   public Object search(@RequestParam String q,
                        @RequestParam(defaultValue="0") int page,
