@@ -1,91 +1,65 @@
 package com.example.newsapp.modules.article.controller;
 
 import com.example.newsapp.modules.article.entity.Article;
-import com.example.newsapp.modules.article.repository.ArticleRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
+import com.example.newsapp.modules.article.service.ArticleService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RestController @RequestMapping("/api/articles")
-@RequiredArgsConstructor
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@RestController
+@RequestMapping("/api/articles")
+@CrossOrigin(origins = "*")
 public class ArticleController {
-  private final ArticleRepository repo;
 
-  @GetMapping public Object list(@RequestParam(defaultValue="0") int page,
-                                 @RequestParam(defaultValue="10") int size){
-    return repo.findAll(PageRequest.of(page, size));
-  }
+    @Autowired
+    private ArticleService articleService;
 
- // @GetMapping("/{id}") public Object get(@PathVariable Long id){ return repo.findById(id).orElseThrow(); }
-@GetMapping("/{value}")
-public Object get(@PathVariable String value) {
-    try {
-        Long id = Long.parseLong(value);
-        return repo.findById(id).orElseThrow();
-    } catch (NumberFormatException e) {
-        return repo.findBySlug(value).orElseThrow();
+    private static final Logger log = LoggerFactory.getLogger(ArticleController.class);
+
+    // ========== LẤY DANH SÁCH HIỂN THỊ TRANG CHỦ ==========
+
+    @GetMapping
+    public List<Article> getHomeArticles(
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String category) {
+
+        if ("newest".equals(sort))
+            return articleService.getLatestArticles();
+
+        if ("most_viewed".equals(sort))
+            return articleService.getMostViewedArticles();
+
+        if (category != null)
+            return articleService.getArticlesByCategory(category);
+
+        return articleService.getLatestArticles(); // default
+    }
+
+    // ========== LẤY CHI TIẾT BÀI VIẾT ==========
+
+//    @GetMapping("/{id}")
+//    public Article getArticle(@PathVariable Long id) {
+//        return articleService.getArticleById(id);
+//    }
+    @GetMapping("/{value}") // Dùng tên 'key' hoặc 'value' đều được
+    public ResponseEntity<Article> getArticle(@PathVariable String value) {
+        Article article = articleService.createArticle(value);
+        return ResponseEntity.ok(article);
+    }
+    // ========== TÌM KIẾM ==========
+    @GetMapping("/search")
+    public List<Article> search(@RequestParam String q) {
+        return articleService.search(q);
+    }
+
+    // ========== THÊM BÀI VIẾT (nếu có admin) ==========
+    @PostMapping
+    public Article createArticle(@RequestBody Article article) {
+        log.info("ArticleController.createArticle received: title='{}' slug='{}' author={}", article == null ? null : article.getTitle(), article == null ? null : article.getSlug(), article == null ? null : article.getAuthor());
+        return articleService.createArticle(String.valueOf(article));
     }
 }
-//    // ========== THÊM BÀI VIẾT (nếu có admin) ==========
-//    @PostMapping
-//    public Article createArticle(@RequestBody Article article) {
-//        return articleService.createArticle(article);
-//    }
-
-  @GetMapping("/search")
-  public Object search(@RequestParam String q,
-                       @RequestParam(defaultValue="0") int page,
-                       @RequestParam(defaultValue="10") int size) {
-    return repo.search(q, PageRequest.of(page, size));
-  }
-
-}
-//package com.example.newsapp.modules.article.controller;
-//
-//import com.example.newsapp.modules.article.service.ArticleService;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.data.domain.PageRequest;
-//import org.springframework.web.bind.annotation.*;
-//
-//@RestController
-//@RequestMapping("/articles")
-//@RequiredArgsConstructor // Dùng để tiêm ArticleService
-//public class ArticleController {
-//
-//    // ⭐ Đã khai báo final để @RequiredArgsConstructor hoạt động
-//    private final ArticleService articleService;
-//
-//    @GetMapping
-//    public Object list(@RequestParam(defaultValue="0") int page,
-//                       @RequestParam(defaultValue="10") int size){
-//        // Giả định ArticleService có phương thức findAll
-//        return articleService.findAll(PageRequest.of(page, size));
-//    }
-//
-//    @GetMapping("/{value}")
-//    public Object get(@PathVariable String value) {
-//        try {
-//            Long id = Long.parseLong(value);
-//            // Lấy theo ID, Service sẽ tăng View Count
-//            return articleService.getArticleById(id);
-//        } catch (NumberFormatException e) {
-//            // Lấy theo Slug, Service sẽ tăng View Count
-//            return articleService.getArticleDetailBySlug(value);
-//        }
-//    }
-//
-//    @GetMapping("/search")
-//    public Object search(@RequestParam String q,
-//                         @RequestParam(defaultValue="0") int page,
-//                         @RequestParam(defaultValue="10") int size) {
-//        // Giả định ArticleService có phương thức search
-//        return articleService.search(q, PageRequest.of(page, size));
-//    }
-//
-//    // ⭐ ENDPOINT ĐÃ SỬA LỖI: Lấy Bài báo Liên quan
-//    @GetMapping("/{slug}")
-//    public Object getRelatedArticles(@PathVariable String slug) {
-//        // Gọi phương thức findRelatedBySlug đã được triển khai trong Service
-//        return articleService.findRelatedBySlug(slug);
-//    }
-//}

@@ -9,12 +9,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DbUserDetailsService implements UserDetailsService {
   private final UserRepository repo;
-  @Override public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+
+  @Override
+  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
     var u = repo.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Not found"));
     return org.springframework.security.core.userdetails.User
-      .withUsername(u.getEmail())
-      .password(u.getPasswordHash())
-      .authorities("ROLE_USER")
-      .accountLocked(false).disabled(false).build();
+        .withUsername(u.getEmail())
+        .password(u.getPasswordHash())
+        .authorities("ROLE_" + u.getRole().name())
+        .accountLocked(false).disabled(false).build();
   }
 }
