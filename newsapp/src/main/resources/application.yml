@@ -4,6 +4,17 @@ spring:
   profiles:
     active: postgres
 
+  # THÊM CÀI ĐẶT DATABASE VÀO ĐÂY
+  datasource:
+    url: jdbc:postgresql://localhost:5432/newsapp
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
 server:
   port: 8080
 
