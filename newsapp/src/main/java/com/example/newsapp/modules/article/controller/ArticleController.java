@@ -39,27 +39,34 @@ public class ArticleController {
         return articleService.getLatestArticles(); // default
     }
 
-    // ========== LẤY CHI TIẾT BÀI VIẾT ==========
-
-//    @GetMapping("/{id}")
-//    public Article getArticle(@PathVariable Long id) {
-//        return articleService.getArticleById(id);
-//    }
-    @GetMapping("/{value}") // Dùng tên 'key' hoặc 'value' đều được
-    public ResponseEntity<Article> getArticle(@PathVariable String value) {
-        Article article = articleService.createArticle(value);
-        return ResponseEntity.ok(article);
-    }
     // ========== TÌM KIẾM ==========
     @GetMapping("/search")
     public List<Article> search(@RequestParam String q) {
         return articleService.search(q);
     }
 
+@GetMapping("/{value}")
+public ResponseEntity<Article> getArticle(@PathVariable String value) {
+
+    Article article;
+
+    // Nếu là số => tìm theo ID
+    if (value.matches("\\d+")) {
+        long id = Long.parseLong(value);
+        article = articleService.getArticleById(id);
+    }
+    // Không phải số => tìm theo slug
+    else {
+        article = articleService.getArticleBySlug(value);
+    }
+
+    return ResponseEntity.ok(article);
+}
+
     // ========== THÊM BÀI VIẾT (nếu có admin) ==========
     @PostMapping
     public Article createArticle(@RequestBody Article article) {
         log.info("ArticleController.createArticle received: title='{}' slug='{}' author={}", article == null ? null : article.getTitle(), article == null ? null : article.getSlug(), article == null ? null : article.getAuthor());
-        return articleService.createArticle(String.valueOf(article));
+        return articleService.createArticle(article);
     }
 }

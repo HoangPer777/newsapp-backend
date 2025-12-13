@@ -1,23 +1,45 @@
 package com.example.newsapp.modules.article.entity;
 
 import com.example.newsapp.modules.account.entity.User;
+import com.example.newsapp.modules.author.entity.Author;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity @Table(name="articles")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Article {
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
-  @Column(nullable=false) private String title;
-  @Column(nullable=false, unique=true) private String slug;
-  @ManyToOne(optional=false) @JoinColumn(name="author_id") private User author;
-  @Column(nullable=false, columnDefinition="text") private String contentPlain;
-  //hinh anh
-  @Column(name = "image_url") // Khớp tên cột trong DB
-  private String imageUrl;
-  @Column(name = "view_count")
-  private Long viewCount = 0L;
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  @Column(nullable=false)
+  private String title;
+
+  @Column(nullable=false, columnDefinition="TEXT")
+  private String content;
+
+  private String summary;
+
   private String category;
-  private Instant publishedAt;
+
+  @Column(nullable=false, unique=true)
+  private String slug;
+
+  @ManyToOne(optional=false) @JoinColumn(name="author_id")
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+  private Author author;
+
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
+
+  private int viewCount = 0;
+  private int likeCount = 0;
+
+  //hinh anh
+  @Column(name = "image_url")
+  private String imageUrl;
+
+//  private Instant publishedAt;
 }

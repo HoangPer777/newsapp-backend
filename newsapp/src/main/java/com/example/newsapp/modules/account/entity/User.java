@@ -1,5 +1,6 @@
 package com.example.newsapp.modules.account.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ public class User {
   private String email;
 
   @Column(nullable=false, name="password_hash")
+  @JsonIgnore
   private String passwordHash;
 
   private String displayName;
