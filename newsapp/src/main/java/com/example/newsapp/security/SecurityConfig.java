@@ -51,6 +51,9 @@ public class SecurityConfig {
           // on matcher behaviour; explicitly listing both avoids 403 for root list.
           .requestMatchers(HttpMethod.GET, "/api/articles", "/api/articles/**").permitAll()
 
+          // Allow GET comments
+          .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
+                .requestMatchers("/error").permitAll()
           // POST /api/articles: allow public for now (easier local testing)
           // Change to `.authenticated()` in production.
           .requestMatchers(HttpMethod.POST, "/api/articles").permitAll()
