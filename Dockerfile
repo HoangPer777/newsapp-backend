@@ -1,17 +1,19 @@
-# Use OpenJDK 17 as base image
-# Use Java 21 to match the compiled JAR (class file version 65)
+# Stage 1: Build the application
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY newsapp/pom.xml .
+COPY newsapp/src ./src
+RUN mvn clean package -DskipTests
+
+# Stage 2: Run the application
 FROM eclipse-temurin:21-jdk-jammy
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 
 # Install curl for container healthcheck
 RUN apt-get update \
   && apt-get install -y --no-install-recommends curl \
   && rm -rf /var/lib/apt/lists/*
-
-# Set working directory
-WORKDIR /app
-
-# Copy the JAR file
-COPY newsapp/target/newsapp-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose port
 EXPOSE 8080

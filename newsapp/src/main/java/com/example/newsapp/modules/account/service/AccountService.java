@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
+// ko dùng nữa chuyển qua xác thực jwt
 @Service
 @RequiredArgsConstructor
 public class AccountService {
@@ -18,17 +19,18 @@ public class AccountService {
       throw new RuntimeException("Email already exists");
     }
     User user = new User(
-            email,
-            passwordEncoder.encode(password),
-            displayName,
-            LocalDateTime.now()
-    );
+        email,
+        passwordEncoder.encode(password),
+        displayName,
+        LocalDateTime.now());
+    user.setRole(com.example.newsapp.modules.account.entity.Role.USER);
+    user.setStatus("ACTIVE");
     return userRepository.save(user);
   }
 
   public User loginUser(String email, String password) {
     var user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+        .orElseThrow(() -> new RuntimeException("User not found"));
 
     if (!passwordEncoder.matches(password, user.getPasswordHash())) {
       throw new RuntimeException("Invalid password");

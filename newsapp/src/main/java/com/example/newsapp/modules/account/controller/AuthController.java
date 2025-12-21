@@ -16,7 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Map;
 
-@RestController 
+@RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
@@ -26,26 +26,40 @@ public class AuthController {
   private final AccountService accountService;
   private final JwtService jwt;
 
-@PostMapping("/register")
-public Map<String,String> register(@RequestBody RegisterReq req){
-  User user = accountService.registerUser(req.email, req.password, req.displayName);
-  String token = jwt.generateAccessToken(user.getEmail(), Map.of("uid", user.getId()));
-  return Map.of("accessToken", token);
-}
+  @PostMapping("/register")
+  public Map<String, String> register(@RequestBody @jakarta.validation.Valid RegisterReq req) {
+    User user = accountService.registerUser(req.email, req.password, req.displayName);
+    String token = jwt.generateAccessToken(user.getEmail(), Map.of("uid", user.getId()));
+    return Map.of("accessToken", token);
+  }
 
   @PostMapping("/login")
-  public Map<String,String> login(@RequestBody LoginReq req){
+  public Map<String, String> login(@RequestBody @jakarta.validation.Valid LoginReq req) {
     User user = accountService.loginUser(req.email, req.password);
     String token = jwt.generateAccessToken(user.getEmail(), Map.of("uid", user.getId()));
     return Map.of("accessToken", token);
   }
 
   @GetMapping("/me")
-  public Map<String,Object> me(@RequestParam String email){
+  public Map<String, Object> me(@RequestParam String email) {
     var u = users.findByEmail(email).orElseThrow();
     return Map.of("id", u.getId(), "email", u.getEmail(), "displayName", u.getDisplayName());
   }
 
-  @Data static class RegisterReq { @Email public String email; @NotBlank public String password; public String displayName; }
-  @Data static class LoginReq { @Email public String email; @NotBlank public String password; }
+  @Data
+  static class RegisterReq {
+    @Email
+    public String email;
+    @NotBlank
+    public String password;
+    public String displayName;
+  }
+
+  @Data
+  static class LoginReq {
+    @Email
+    public String email;
+    @NotBlank
+    public String password;
+  }
 }

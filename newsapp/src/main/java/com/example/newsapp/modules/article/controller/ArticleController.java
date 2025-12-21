@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -14,6 +16,8 @@ public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+
+    private static final Logger log = LoggerFactory.getLogger(ArticleController.class);
 
     // ========== LẤY DANH SÁCH HIỂN THỊ TRANG CHỦ ==========
 
@@ -27,12 +31,21 @@ public class ArticleController {
 
         if ("most_viewed".equals(sort))
             return articleService.getMostViewedArticles();
+        
+        if("most_liked".equals(sort))
+            return articleService.getMostLikedArticles();
 
         if (category != null)
             return articleService.getArticlesByCategory(category);
 
         return articleService.getLatestArticles(); // default
     }
+    // thông báo
+    @GetMapping("/notifications/new")
+    public List<Article> notifyNewArticles() {
+        return articleService.getLatestArticles();
+    }
+
 
     // ========== LẤY CHI TIẾT BÀI VIẾT ==========
 
@@ -50,6 +63,7 @@ public class ArticleController {
     // ========== THÊM BÀI VIẾT (nếu có admin) ==========
     @PostMapping
     public Article createArticle(@RequestBody Article article) {
+        log.info("ArticleController.createArticle received: title='{}' slug='{}' author={}", article == null ? null : article.getTitle(), article == null ? null : article.getSlug(), article == null ? null : article.getAuthor());
         return articleService.createArticle(article);
     }
 }

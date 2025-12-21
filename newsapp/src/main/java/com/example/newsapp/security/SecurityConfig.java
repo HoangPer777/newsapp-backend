@@ -51,8 +51,9 @@ public class SecurityConfig {
           // on matcher behaviour; explicitly listing both avoids 403 for root list.
           .requestMatchers(HttpMethod.GET, "/api/articles", "/api/articles/**").permitAll()
 
-          // Nhưng POST /api/articles phải có JWT
-          .requestMatchers(HttpMethod.POST, "/api/articles").authenticated()
+          // POST /api/articles: allow public for now (easier local testing)
+          // Change to `.authenticated()` in production.
+          .requestMatchers(HttpMethod.POST, "/api/articles").permitAll()
 
           // Các route khác yêu cầu JWT
           .anyRequest().authenticated()
