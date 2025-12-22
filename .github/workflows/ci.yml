@@ -124,3 +124,44 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
+  deploy:
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Copy docker-compose.yml to Droplet
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.DO_HOST }}
+        username: ${{ secrets.DO_USERNAME }}
+        key: ${{ secrets.DO_SSH_KEY }}
+        source: "docker-compose.yml"
+        target: "/root/newsapp"
+
+    - name: Deploy to Droplet
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DO_HOST }}
+        username: ${{ secrets.DO_USERNAME }}
+        key: ${{ secrets.DO_SSH_KEY }}
+        script: |
+          # Navigate to project directory
+          cd /root/newsapp
+          
+          # Export environment variables
+          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          
+          # Pull latest images
+          docker compose pull
+          
+          # Restart services
+          docker compose up -d --remove-orphans
+          
+          # Clean up unused images
+          docker image prune -f
+
