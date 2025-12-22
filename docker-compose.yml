@@ -1,6 +1,7 @@
 services:
   # Spring Boot Application
   app:
+    image: ${DOCKER_USERNAME}/newsapp-backend:latest
     build:
       context: .
       dockerfile: Dockerfile
