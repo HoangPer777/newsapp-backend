@@ -17,6 +17,7 @@ public class Article {
   @Column(nullable=false)
   private String title;
 
+  @Lob
   @Column(nullable=false, columnDefinition="TEXT")
   private String content;
 
