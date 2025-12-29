@@ -1,11 +1,10 @@
 package com.example.newsapp.modules.article.entity;
 
-import com.example.newsapp.modules.account.entity.User;
 import com.example.newsapp.modules.author.entity.Author;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.Instant;
+
 import java.time.LocalDateTime;
 
 @Entity @Table(name="articles")

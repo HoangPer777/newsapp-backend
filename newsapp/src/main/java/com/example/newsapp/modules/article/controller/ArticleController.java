@@ -4,8 +4,11 @@ import com.example.newsapp.modules.article.entity.Article;
 import com.example.newsapp.modules.article.service.ArticleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +68,14 @@ public ResponseEntity<Article> getArticle(@PathVariable String value) {
 
     // ========== THÊM BÀI VIẾT (nếu có admin) ==========
     @PostMapping
-    public Article createArticle(@RequestBody Article article) {
-        log.info("ArticleController.createArticle received: title='{}' slug='{}' author={}", article == null ? null : article.getTitle(), article == null ? null : article.getSlug(), article == null ? null : article.getAuthor());
-        return articleService.createArticle(article);
+    public ResponseEntity<Article> createArticle(@RequestBody Article article, java.security.Principal principal) {
+        // 1. Lấy email từ principal (người đang đăng nhập)
+        String email = principal.getName();
+
+        // 2. Truyền THÊM tham số email vào hàm createArticle để khớp với Service
+        Article saved = articleService.createArticle(article, email);
+
+        return ResponseEntity.ok(saved);
     }
+
 }

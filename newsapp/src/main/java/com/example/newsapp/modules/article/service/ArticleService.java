@@ -1,7 +1,11 @@
 package com.example.newsapp.modules.article.service;
 
+import com.example.newsapp.modules.account.entity.User;
+import com.example.newsapp.modules.account.repository.UserRepository;
 import com.example.newsapp.modules.article.entity.Article;
 import com.example.newsapp.modules.article.repository.ArticleRepository;
+import com.example.newsapp.modules.author.entity.Author;
+import com.example.newsapp.modules.author.repository.AuthorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -18,6 +22,10 @@ public class ArticleService {
 
     @Autowired
     private ArticleRepository articleRepository;
+
+    @Autowired
+    private UserRepository userRepository; // THÊM DÒNG NÀY
+    @Autowired private AuthorRepository authorRepository;
 
     public List<Article> getLatestArticles() {
         return articleRepository.findTop20ByOrderByCreatedAtDesc();
@@ -42,43 +50,36 @@ public class ArticleService {
         article.setViewCount(article.getViewCount() + 1);
         return articleRepository.save(article);
     }
-
-//    public Article createArticle(Article article) {
-//        // debug incoming article
-//        log.info("createArticle called: title='{}' slug='{}'", article == null ? null : article.getTitle(), article == null ? null : article.getSlug());
-//
-//        // set created time if missing
-//        if (article.getCreatedAt() == null) {
-//            article.setCreatedAt(LocalDateTime.now());
-//        }
-
-//        // generate or normalize slug (use provided slug if present, otherwise generate from title)
-//        String sourceForSlug = (article.getSlug() != null && !article.getSlug().trim().isEmpty())
-//                ? article.getSlug()
-//                : (article.getTitle() == null ? "article" : article.getTitle());
-//        String base = slugify(sourceForSlug);
-//        String candidate = base;
-//        int suffix = 0;
-//        while (articleRepository.existsBySlug(candidate)) {
-//            suffix++;
-//            candidate = base + "-" + suffix;
-//        }
-//        article.setSlug(candidate);
-//
-//        return articleRepository.save(article);
-//    }
     public Article getArticleBySlug(String slug) {
         return articleRepository.findBySlug(slug)
                 .orElseThrow(() -> new RuntimeException("Slug not found"));
     }
 
-    public Article createArticle(Article article) {
-        // 1. Log
-        log.info("createArticle called: title='{}'", article.getTitle());
-        // 2. Tự động điền ngày tạo nếu thiếu
-        if (article.getCreatedAt() == null) {
-            article.setCreatedAt(LocalDateTime.now());
-        }
+// CẬP NHẬT HÀM NÀY: Nhận thêm tham số email của người đăng nhập
+public Article createArticle(Article article, String email) {
+    log.info("createArticle called: title='{}' by user='{}'", article.getTitle(), email);
+
+    // 2. Tìm User từ Email (Token)
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người dùng"));
+
+    // 3. Tìm Author tương ứng với User đó
+    Author author = authorRepository.findByUser(user)
+            .orElseThrow(() -> new RuntimeException("Tài khoản này chưa được cấp quyền Tác giả"));
+
+    // 4. Gán Author (đúng kiểu dữ liệu Author) vào bài báo
+    article.setAuthor(author);
+
+    // 3. Tự động điền thông tin mặc định nếu thiếu
+    if (article.getCreatedAt() == null) {
+        article.setCreatedAt(LocalDateTime.now());
+    }
+    if (article.getViewCount() == 0) {
+        article.setViewCount(0);
+    }
+    if (article.getLikeCount() == 0) {
+        article.setLikeCount(0);
+    }
         // 3. Xử lý SLUG
         // Nếu không gửi slug lên, lấy title làm slug. Nếu có thì dùng slug đó.
         String sourceForSlug = (article.getSlug() != null && !article.getSlug().trim().isEmpty())

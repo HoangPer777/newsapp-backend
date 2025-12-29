@@ -56,8 +56,8 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
           // POST /api/articles: allow public for now (easier local testing)
           // Change to `.authenticated()` in production.
-          .requestMatchers(HttpMethod.POST, "/api/articles").permitAll()
-
+//          .requestMatchers(HttpMethod.POST, "/api/articles").permitAll()
+          .requestMatchers(HttpMethod.POST, "/api/articles").hasRole("ADMIN")
           // Các route khác yêu cầu JWT
           .anyRequest().authenticated()
         )
