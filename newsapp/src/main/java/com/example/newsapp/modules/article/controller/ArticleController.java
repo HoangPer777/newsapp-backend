@@ -69,4 +69,9 @@ public ResponseEntity<Article> getArticle(@PathVariable String value) {
         log.info("ArticleController.createArticle received: title='{}' slug='{}' author={}", article == null ? null : article.getTitle(), article == null ? null : article.getSlug(), article == null ? null : article.getAuthor());
         return articleService.createArticle(article);
     }
+    // ========== THÔNG BÁO BÀI VIẾT MỚI ==========
+     @GetMapping("/notifications/new")
+    public List<Article> notifyNewArticles() {
+        return articleService.getLatestArticles();
+    }
 }
