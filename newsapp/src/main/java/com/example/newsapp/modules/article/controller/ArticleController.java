@@ -33,6 +33,9 @@ public class ArticleController {
         if ("most_viewed".equals(sort))
             return articleService.getMostViewedArticles();
 
+        if ("most_liked".equals(sort))
+            return articleService.getMostLikedArticles();
+
         if (category != null)
             return articleService.getArticlesByCategory(category);
 

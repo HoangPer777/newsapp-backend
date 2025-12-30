@@ -27,6 +27,10 @@ public class ArticleService {
         return articleRepository.findTop20ByOrderByViewCountDesc();
     }
 
+      public List<Article> getMostLikedArticles() {
+        return articleRepository.findTop20ByOrderByLikeCountDesc();
+    }
+
     public List<Article> getArticlesByCategory(String category) {
         return articleRepository.findByCategoryOrderByCreatedAtDesc(category);
     }
