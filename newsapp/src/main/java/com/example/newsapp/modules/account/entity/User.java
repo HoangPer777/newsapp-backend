@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity @Table(name="users")
 @Getter
+@Setter
 @NoArgsConstructor
 public class User {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,6 +27,8 @@ public class User {
 
   @Column(name="phone_number")
   private String phoneNumber;
+
+   private String gender;
 
   private String address;
 
@@ -50,13 +53,5 @@ public class User {
     this.updatedAt = createdAt;
   }
 
-  public void setEmail(String email) { this.email = email; }
-  public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
-  public void setDisplayName(String displayName) { this.displayName = displayName; }
-  public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
-  public void setAddress(String address) { this.address = address; }
-  public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
-  public void setRole(Role role) { this.role = role; }
-  public void setStatus(String status) { this.status = status; }
-  public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+  
 }

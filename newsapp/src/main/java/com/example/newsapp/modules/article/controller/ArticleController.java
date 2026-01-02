@@ -36,6 +36,9 @@ public class ArticleController {
         if ("most_viewed".equals(sort))
             return articleService.getMostViewedArticles();
 
+        if ("most_liked".equals(sort))
+            return articleService.getMostLikedArticles();
+
         if (category != null)
             return articleService.getArticlesByCategory(category);
 
@@ -73,5 +76,10 @@ public class ArticleController {
                 article == null ? null : article.getTitle(), article == null ? null : article.getSlug(),
                 article == null ? null : article.getAuthor());
         return articleService.createArticle(article);
+    }
+    // ========== THÔNG BÁO BÀI VIẾT MỚI ==========
+     @GetMapping("/notifications/new")
+    public List<Article> notifyNewArticles() {
+        return articleService.getLatestArticles();
     }
 }
