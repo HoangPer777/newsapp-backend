@@ -27,6 +27,9 @@ public class ArticleController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String category) {
 
+        if ("all".equals(sort))
+            return articleService.getAllArticles();
+
         if ("newest".equals(sort))
             return articleService.getLatestArticles();
 
@@ -45,28 +48,30 @@ public class ArticleController {
         return articleService.search(q);
     }
 
-@GetMapping("/{value}")
-public ResponseEntity<Article> getArticle(@PathVariable String value) {
+    @GetMapping("/{value}")
+    public ResponseEntity<Article> getArticle(@PathVariable String value) {
 
-    Article article;
+        Article article;
 
-    // Nếu là số => tìm theo ID
-    if (value.matches("\\d+")) {
-        long id = Long.parseLong(value);
-        article = articleService.getArticleById(id);
+        // Nếu là số => tìm theo ID
+        if (value.matches("\\d+")) {
+            long id = Long.parseLong(value);
+            article = articleService.getArticleById(id);
+        }
+        // Không phải số => tìm theo slug
+        else {
+            article = articleService.getArticleBySlug(value);
+        }
+
+        return ResponseEntity.ok(article);
     }
-    // Không phải số => tìm theo slug
-    else {
-        article = articleService.getArticleBySlug(value);
-    }
-
-    return ResponseEntity.ok(article);
-}
 
     // ========== THÊM BÀI VIẾT (nếu có admin) ==========
     @PostMapping
     public Article createArticle(@RequestBody Article article) {
-        log.info("ArticleController.createArticle received: title='{}' slug='{}' author={}", article == null ? null : article.getTitle(), article == null ? null : article.getSlug(), article == null ? null : article.getAuthor());
+        log.info("ArticleController.createArticle received: title='{}' slug='{}' author={}",
+                article == null ? null : article.getTitle(), article == null ? null : article.getSlug(),
+                article == null ? null : article.getAuthor());
         return articleService.createArticle(article);
     }
 }
