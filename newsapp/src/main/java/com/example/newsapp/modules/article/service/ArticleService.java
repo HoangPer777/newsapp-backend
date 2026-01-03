@@ -23,6 +23,10 @@ public class ArticleService {
         return articleRepository.findTop20ByOrderByCreatedAtDesc();
     }
 
+    public List<Article> getAllArticles() {
+        return articleRepository.findAll();
+    }
+
     public List<Article> getMostViewedArticles() {
         return articleRepository.findTop20ByOrderByViewCountDesc();
     }
@@ -47,30 +51,33 @@ public class ArticleService {
         return articleRepository.save(article);
     }
 
-//    public Article createArticle(Article article) {
-//        // debug incoming article
-//        log.info("createArticle called: title='{}' slug='{}'", article == null ? null : article.getTitle(), article == null ? null : article.getSlug());
-//
-//        // set created time if missing
-//        if (article.getCreatedAt() == null) {
-//            article.setCreatedAt(LocalDateTime.now());
-//        }
+    // public Article createArticle(Article article) {
+    // // debug incoming article
+    // log.info("createArticle called: title='{}' slug='{}'", article == null ? null
+    // : article.getTitle(), article == null ? null : article.getSlug());
+    //
+    // // set created time if missing
+    // if (article.getCreatedAt() == null) {
+    // article.setCreatedAt(LocalDateTime.now());
+    // }
 
-//        // generate or normalize slug (use provided slug if present, otherwise generate from title)
-//        String sourceForSlug = (article.getSlug() != null && !article.getSlug().trim().isEmpty())
-//                ? article.getSlug()
-//                : (article.getTitle() == null ? "article" : article.getTitle());
-//        String base = slugify(sourceForSlug);
-//        String candidate = base;
-//        int suffix = 0;
-//        while (articleRepository.existsBySlug(candidate)) {
-//            suffix++;
-//            candidate = base + "-" + suffix;
-//        }
-//        article.setSlug(candidate);
-//
-//        return articleRepository.save(article);
-//    }
+    // // generate or normalize slug (use provided slug if present, otherwise
+    // generate from title)
+    // String sourceForSlug = (article.getSlug() != null &&
+    // !article.getSlug().trim().isEmpty())
+    // ? article.getSlug()
+    // : (article.getTitle() == null ? "article" : article.getTitle());
+    // String base = slugify(sourceForSlug);
+    // String candidate = base;
+    // int suffix = 0;
+    // while (articleRepository.existsBySlug(candidate)) {
+    // suffix++;
+    // candidate = base + "-" + suffix;
+    // }
+    // article.setSlug(candidate);
+    //
+    // return articleRepository.save(article);
+    // }
     public Article getArticleBySlug(String slug) {
         return articleRepository.findBySlug(slug)
                 .orElseThrow(() -> new RuntimeException("Slug not found"));
@@ -104,20 +111,21 @@ public class ArticleService {
     }
 
     private String slugify(String input) {
-    if (input == null) return "article";
-    String nowhitespace = input.trim().toLowerCase();
-    // remove accents
-    String normalized = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
-    String noAccents = normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
-    // replace non-alphanumeric with hyphen
-    String slug = noAccents.replaceAll("[^a-z0-9]+", "-");
-    // collapse hyphens
-    slug = slug.replaceAll("-+", "-");
-    // trim leading/trailing hyphens
-    slug = slug.replaceAll("(^-+|-+$)", "");
-    if (slug.isEmpty()) return "article";
-    return slug;
-  }
-
+        if (input == null)
+            return "article";
+        String nowhitespace = input.trim().toLowerCase();
+        // remove accents
+        String normalized = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
+        String noAccents = normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        // replace non-alphanumeric with hyphen
+        String slug = noAccents.replaceAll("[^a-z0-9]+", "-");
+        // collapse hyphens
+        slug = slug.replaceAll("-+", "-");
+        // trim leading/trailing hyphens
+        slug = slug.replaceAll("(^-+|-+$)", "");
+        if (slug.isEmpty())
+            return "article";
+        return slug;
+    }
 
 }
