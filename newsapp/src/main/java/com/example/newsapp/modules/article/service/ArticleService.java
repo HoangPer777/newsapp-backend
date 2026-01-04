@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.client.RestTemplate;
 
 import java.text.Normalizer;
 import java.time.LocalDateTime;
@@ -24,8 +25,13 @@ public class ArticleService {
     private ArticleRepository articleRepository;
 
     @Autowired
-    private UserRepository userRepository; // THÊM DÒNG NÀY
+    private UserRepository userRepository;
     @Autowired private AuthorRepository authorRepository;
+
+    @Autowired
+    private RestTemplate restTemplate; // 2. INJECT RESTTEMPLATE
+    private final String PYTHON_SYNC_URL = "http://10.0.2.2:8000/sync";
+
 
     public List<Article> getLatestArticles() {
         return articleRepository.findTop20ByOrderByCreatedAtDesc();
@@ -97,7 +103,20 @@ public Article createArticle(Article article, String email) {
         }
         article.setSlug(finalSlug);
         // 5. Lưu vào DB
-        return articleRepository.save(article);
+//        return articleRepository.save(article);
+    Article savedArticle = articleRepository.save(article);
+    // 6. GỌI PYTHON ĐỂ ĐỒNG BỘ CHATBOT
+    try {
+        log.info("Đang gọi Python để sync bài báo mới cho Chatbot...");
+        // Gọi endpoint /sync mà Han vừa gửi bên Python
+        restTemplate.postForEntity(PYTHON_SYNC_URL, null, String.class);
+        log.info("Đồng bộ Chatbot thành công!");
+    } catch (Exception e) {
+        // Chúng ta dùng try-catch để nếu Python lỗi thì bài báo vẫn được lưu ở Java
+        log.error("Lỗi khi đồng bộ Chatbot (Python có thể chưa chạy): {}", e.getMessage());
+    }
+
+    return savedArticle;
     }
 
     private String slugify(String input) {
