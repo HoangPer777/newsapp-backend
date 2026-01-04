@@ -62,8 +62,12 @@ public class SecurityConfig {
           // Change to `.authenticated()` in production.
 //          .requestMatchers(HttpMethod.POST, "/api/articles").permitAll()
           .requestMatchers(HttpMethod.POST, "/api/articles").hasRole("ADMIN")
-          // Các route khác yêu cầu JWT
-          .anyRequest().authenticated()
+
+          .requestMatchers("/api/articles/search").permitAll()
+          .requestMatchers("/api/qa/**", "/api/chat/**", "/api/chatbot/**").permitAll()
+           // Các route khác yêu cầu JWT
+//          .anyRequest().authenticated()
+                        .anyRequest().permitAll()
         )
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
         .cors(Customizer.withDefaults());
