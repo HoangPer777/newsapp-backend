@@ -7,10 +7,9 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class ChatbotService {
     private final RestTemplate restTemplate = new RestTemplate();
-    // Dùng localhost nhé!
     private final String PYTHON_SYNC_URL = "http://localhost:8000/sync";
 
-    @Async // <--- Quan trọng
+    @Async
     public void syncChatbotData() {
         try {
             // In log task name để kiểm tra

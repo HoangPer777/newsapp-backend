@@ -172,7 +172,6 @@ public Article createArticle(Article article, String email) {
     // 7. Trả về ngay lập tức cho Flutter
     return savedArticle;
     }
-    // === THÊM HÀM MỚI NÀY VÀO CUỐI FILE ===
 //    @Async // <--- Annotation quan trọng: Nó bảo Java chạy hàm này ở luồng riêng
 //    public void syncChatbotData() {
 //        try {

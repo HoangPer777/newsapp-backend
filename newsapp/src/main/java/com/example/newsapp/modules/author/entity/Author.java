@@ -20,7 +20,6 @@ public class Author {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // THÊM LIÊN KẾT NÀY ĐỂ HẾT LỖI findByUser
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
