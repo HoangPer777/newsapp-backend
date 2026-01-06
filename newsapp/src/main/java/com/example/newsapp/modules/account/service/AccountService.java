@@ -30,8 +30,12 @@ public class AccountService {
   }
 
   public User loginUser(String email, String password) {
+      System.out.println("MÃ HASH CHUẨN TRÊN MÁY HAN: " + passwordEncoder.encode("123456"));
     var user = userRepository.findByEmail(email)
         .orElseThrow(() -> new RuntimeException("User not found"));
+
+      System.out.println("Mật khẩu từ Flutter: " + password);
+      System.out.println("Mật khẩu băm trong DB: " + user.getPasswordHash());
 
     if (!passwordEncoder.matches(password, user.getPasswordHash())) {
       throw new RuntimeException("Invalid password");

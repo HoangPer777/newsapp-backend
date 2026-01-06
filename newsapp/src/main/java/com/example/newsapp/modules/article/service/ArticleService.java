@@ -1,11 +1,17 @@
 package com.example.newsapp.modules.article.service;
 
+import com.example.newsapp.modules.account.entity.User;
+import com.example.newsapp.modules.account.repository.UserRepository;
 import com.example.newsapp.modules.article.entity.Article;
 import com.example.newsapp.modules.article.repository.ArticleRepository;
+import com.example.newsapp.modules.author.entity.Author;
+import com.example.newsapp.modules.author.repository.AuthorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.client.RestTemplate;
 
 import java.text.Normalizer;
 import java.time.LocalDateTime;
@@ -18,6 +24,15 @@ public class ArticleService {
 
     @Autowired
     private ArticleRepository articleRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired private AuthorRepository authorRepository;
+
+    @Autowired
+    private RestTemplate restTemplate; // 2. INJECT RESTTEMPLATE
+    private final String PYTHON_SYNC_URL = "http://10.0.2.2:8000/sync";
+    @Autowired private ChatbotService chatbotService; // Inject vào
 
     public List<Article> getLatestArticles() {
         return articleRepository.findTop20ByOrderByCreatedAtDesc();
@@ -83,13 +98,41 @@ public class ArticleService {
                 .orElseThrow(() -> new RuntimeException("Slug not found"));
     }
 
-    public Article createArticle(Article article) {
-        // 1. Log
-        log.info("createArticle called: title='{}'", article.getTitle());
-        // 2. Tự động điền ngày tạo nếu thiếu
-        if (article.getCreatedAt() == null) {
-            article.setCreatedAt(LocalDateTime.now());
-        }
+// CẬP NHẬT HÀM NÀY: Nhận thêm tham số email của người đăng nhập
+public Article createArticle(Article article, String email) {
+    log.info("createArticle called: title='{}' by user='{}'", article.getTitle(), email);
+
+    // 2. Tìm User từ Email (Token)
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người dùng"));
+
+    //Logic mới: Nếu là ADMIN thì cho phép luôn. Nếu không phải Admin thì mới kiểm tra bảng Author.
+    if (user.getRole().name().equalsIgnoreCase("ADMIN")) {
+        // Là Admin -> Set trực tiếp User làm tác giả
+        article.setAuthor(user);
+    } else {
+        // Không phải Admin -> Bắt buộc phải có trong bảng Author
+        Author author = authorRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Tài khoản này chưa được cấp quyền Tác giả"));
+        article.setAuthor(author.getUser());
+    }
+//    // 3. Tìm Author tương ứng với User đó
+//    Author author = authorRepository.findByUser(user)
+//            .orElseThrow(() -> new RuntimeException("Tài khoản này chưa được cấp quyền Tác giả"));
+//
+//    // 4. Gán Author (đúng kiểu dữ liệu Author) vào bài báo
+//    article.setAuthor(author.getUser());
+
+    // 3. Tự động điền thông tin mặc định nếu thiếu
+    if (article.getCreatedAt() == null) {
+        article.setCreatedAt(LocalDateTime.now());
+    }
+    if (article.getViewCount() == 0) {
+        article.setViewCount(0);
+    }
+    if (article.getLikeCount() == 0) {
+        article.setLikeCount(0);
+    }
         // 3. Xử lý SLUG
         // Nếu không gửi slug lên, lấy title làm slug. Nếu có thì dùng slug đó.
         String sourceForSlug = (article.getSlug() != null && !article.getSlug().trim().isEmpty())
@@ -107,8 +150,39 @@ public class ArticleService {
         }
         article.setSlug(finalSlug);
         // 5. Lưu vào DB
-        return articleRepository.save(article);
+//        return articleRepository.save(article);
+    Article savedArticle = articleRepository.save(article);
+
+    // 6. GỌI HÀM ASYNC (Chạy ngầm, không bắt Flutter đợi)
+//    syncChatbotData();
+    // Gọi sang service kia (Async mới hoạt động)
+    chatbotService.syncChatbotData();
+    // 6. GỌI PYTHON ĐỂ ĐỒNG BỘ CHATBOT
+//    try {
+//        log.info("Đang gọi Python để sync bài báo mới cho Chatbot...");
+//        // Gọi endpoint /sync mà Han vừa gửi bên Python
+//        restTemplate.postForEntity(PYTHON_SYNC_URL, null, String.class);
+//        log.info("Đồng bộ Chatbot thành công!");
+//    } catch (Exception e) {
+//        // Chúng ta dùng try-catch để nếu Python lỗi thì bài báo vẫn được lưu ở Java
+//        log.error("Lỗi khi đồng bộ Chatbot (Python có thể chưa chạy): {}", e.getMessage());
+//    }
+
+
+    // 7. Trả về ngay lập tức cho Flutter
+    return savedArticle;
     }
+//    @Async // <--- Annotation quan trọng: Nó bảo Java chạy hàm này ở luồng riêng
+//    public void syncChatbotData() {
+//        try {
+//            log.info("BẮT ĐẦU chạy ngầm: Gọi Python để sync bài báo...");
+//            // Gọi endpoint /sync
+//            restTemplate.postForEntity(PYTHON_SYNC_URL, null, String.class);
+//            log.info("KẾT THÚC chạy ngầm: Đồng bộ Chatbot thành công!");
+//        } catch (Exception e) {
+//            log.error("Lỗi khi đồng bộ Chatbot ngầm: {}", e.getMessage());
+//        }
+//    }
 
     private String slugify(String input) {
         if (input == null)
