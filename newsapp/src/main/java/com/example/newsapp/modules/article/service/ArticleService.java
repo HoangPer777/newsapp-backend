@@ -7,6 +7,7 @@ import com.example.newsapp.modules.article.repository.ArticleRepository;
 import com.example.newsapp.modules.author.entity.Author;
 import com.example.newsapp.modules.author.repository.AuthorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -31,8 +32,8 @@ public class ArticleService {
 
     @Autowired
     private RestTemplate restTemplate; // 2. INJECT RESTTEMPLATE
-    private final String PYTHON_SYNC_URL = "http://10.0.2.2:8000/sync";
-    @Autowired private ChatbotService chatbotService; // Inject vào
+    @Value("${app.chatbot.sync-url}")
+    private String pythonSyncUrl;    @Autowired private ChatbotService chatbotService; // Inject vào
 
     public List<Article> getLatestArticles() {
         return articleRepository.findTop20ByOrderByCreatedAtDesc();
@@ -161,7 +162,7 @@ public Article createArticle(Article article, String email) {
 //    try {
 //        log.info("Đang gọi Python để sync bài báo mới cho Chatbot...");
 //        // Gọi endpoint /sync mà Han vừa gửi bên Python
-//        restTemplate.postForEntity(PYTHON_SYNC_URL, null, String.class);
+//        restTemplate.postForEntity(pythonSyncUrl, null, String.class);
 //        log.info("Đồng bộ Chatbot thành công!");
 //    } catch (Exception e) {
 //        // Chúng ta dùng try-catch để nếu Python lỗi thì bài báo vẫn được lưu ở Java
@@ -177,7 +178,7 @@ public Article createArticle(Article article, String email) {
 //        try {
 //            log.info("BẮT ĐẦU chạy ngầm: Gọi Python để sync bài báo...");
 //            // Gọi endpoint /sync
-//            restTemplate.postForEntity(PYTHON_SYNC_URL, null, String.class);
+//            restTemplate.postForEntity(pythonSyncUrl, null, String.class);
 //            log.info("KẾT THÚC chạy ngầm: Đồng bộ Chatbot thành công!");
 //        } catch (Exception e) {
 //            log.error("Lỗi khi đồng bộ Chatbot ngầm: {}", e.getMessage());
