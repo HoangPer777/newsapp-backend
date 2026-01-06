@@ -37,16 +37,33 @@ public class AuthController {
     return Map.of("accessToken", token);
   }
 
-  @PostMapping("/login")
-  public Map<String, Object> login(@RequestBody LoginReq req) {
+//  @PostMapping("/login")
+//  public Map<String, Object> login(@RequestBody LoginReq req) {
+//    User user = accountService.loginUser(req.email, req.password);
+//    String token = jwt.generateAccessToken(user.getEmail(), Map.of("uid", user.getId()));
+//
+//    Map<String, Object> response = new HashMap<>();
+//    response.put("accessToken", token);
+//    response.put("userId", user.getId()); // Trả về ID để Flutter có cái mà gọi /me?uid=...
+//    return response;
+//  }
+@PostMapping("/login")
+public Map<String, Object> login(@RequestBody LoginReq req) {
     User user = accountService.loginUser(req.email, req.password);
-    String token = jwt.generateAccessToken(user.getEmail(), Map.of("uid", user.getId()));
-    
+
+    // Thêm Role vào Claims của JWT
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("uid", user.getId());
+    claims.put("role", user.getRole().name()); // Thêm dòng này
+
+    String token = jwt.generateAccessToken(user.getEmail(), claims);
+
     Map<String, Object> response = new HashMap<>();
     response.put("accessToken", token);
-    response.put("userId", user.getId()); // Trả về ID để Flutter có cái mà gọi /me?uid=...
+    response.put("userId", user.getId());
+    response.put("role", user.getRole().name()); // Trả về cho Flutter để hiện UI Admin
     return response;
-  }
+}
 
 
   @GetMapping("/me")
@@ -58,11 +75,12 @@ public class AuthController {
     response.put("id", u.getId());
     response.put("email", u.getEmail());
     response.put("displayName", u.getDisplayName());
-    response.put("phoneNumber", u.getPhoneNumber()); 
+    response.put("phoneNumber", u.getPhoneNumber());
     response.put("gender", u.getGender());
     response.put("address", u.getAddress());
     response.put("avatarUrl", u.getAvatarUrl());
-    
+    response.put("role", u.getRole().name());
+
     return response;
   }
 
@@ -70,10 +88,10 @@ public class AuthController {
   public Map<String, Object> updateUserInfo(@RequestParam Long uid, @RequestBody UpdateUserReq req) {
     // 1. Gọi Service để cập nhật (Đảm bảo truyền đúng phoneNumber và address)
     User updatedUser = accountService.updateUserInfo(
-        uid, 
-        req.displayName, 
-        req.phoneNumber, 
-        req.gender, 
+        uid,
+        req.displayName,
+        req.phoneNumber,
+        req.gender,
         req.address
     );
 
@@ -86,7 +104,7 @@ public class AuthController {
     response.put("gender", updatedUser.getGender());
     response.put("address", updatedUser.getAddress());
     response.put("avatarUrl", updatedUser.getAvatarUrl());
-    
+
     return response;
   }
 
@@ -105,10 +123,10 @@ public class AuthController {
 
     // 2. Mã hóa mật khẩu mới và cập nhật
     user.setPasswordHash(encoder.encode(req.newPassword));
-    
+
     // 3. Cập nhật thời gian thay đổi (Đồng bộ với Entity User mới)
     user.setUpdatedAt(LocalDateTime.now());
-    
+
     users.save(user);
 
     return Map.of("message", "Password updated successfully");
@@ -134,7 +152,7 @@ public class AuthController {
   }
   @Data static class UpdateUserReq {
     public String displayName;
-    public String phoneNumber; 
+    public String phoneNumber;
     public String gender;
     public String address;
   }
