@@ -43,6 +43,8 @@ public class User {
 
   @Column(name="updated_at")
   private LocalDateTime updatedAt;
+  private String resetToken;
+  private LocalDateTime tokenExpiry;
 
   // Constructor with createdAt
   public User(String email, String passwordHash, String displayName, LocalDateTime createdAt) {

@@ -3,6 +3,21 @@ spring:
     name: newsapp
   profiles:
     active: postgres
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: nhatthcs940@gmail.com
+    password: htavdtquyegafxci
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
 
   # THÊM CÀI ĐẶT DATABASE VÀO ĐÂY
   datasource:
