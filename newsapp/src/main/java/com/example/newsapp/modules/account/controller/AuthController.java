@@ -33,16 +33,27 @@ public class AuthController {
     return Map.of("accessToken", token);
   }
 
-  @PostMapping("/login")
-  public Map<String, Object> login(@RequestBody LoginReq req) {
+//  @PostMapping("/login")
+//  public Map<String, Object> login(@RequestBody LoginReq req) {
+//    User user = accountService.loginUser(req.email, req.password);
+//    String token = jwt.generateAccessToken(user.getEmail(), Map.of("uid", user.getId()));
+//
+//    Map<String, Object> response = new HashMap<>();
+//    response.put("accessToken", token);
+//    response.put("userId", user.getId()); // Trả về ID để Flutter có cái mà gọi /me?uid=...
+//    return response;
+//  }
+@PostMapping("/login")
+public Map<String, Object> login(@RequestBody LoginReq req) {
     User user = accountService.loginUser(req.email, req.password);
     String token = jwt.generateAccessToken(user.getEmail(), Map.of("uid", user.getId()));
 
     Map<String, Object> response = new HashMap<>();
     response.put("accessToken", token);
-    response.put("userId", user.getId()); // Trả về ID để Flutter có cái mà gọi /me?uid=...
+    response.put("userId", user.getId());
+    response.put("role", user.getRole().name()); // Trả về cho Flutter để hiện UI Admin
     return response;
-  }
+}
 
   @PostMapping("/forgot-password")
   public Map<String, String> forgotPassword(@RequestBody ForgotPasswordReq req) {

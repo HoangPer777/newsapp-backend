@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @RequiredArgsConstructor
@@ -30,7 +31,10 @@ public class SecurityConfig {
     p.setUserDetailsService(userDetailsService);
     return new ProviderManager(p);
   }
-
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.csrf(csrf -> csrf.disable())
@@ -56,10 +60,14 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
           // POST /api/articles: allow public for now (easier local testing)
           // Change to `.authenticated()` in production.
-          .requestMatchers(HttpMethod.POST, "/api/articles").permitAll()
+//          .requestMatchers(HttpMethod.POST, "/api/articles").permitAll()
+          .requestMatchers(HttpMethod.POST, "/api/articles").hasRole("ADMIN")
 
-          // Các route khác yêu cầu JWT
-          .anyRequest().authenticated()
+          .requestMatchers("/api/articles/search").permitAll()
+          .requestMatchers("/api/qa/**", "/api/chat/**", "/api/chatbot/**").permitAll()
+           // Các route khác yêu cầu JWT
+//          .anyRequest().authenticated()
+                        .anyRequest().permitAll()
         )
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
         .cors(Customizer.withDefaults());
