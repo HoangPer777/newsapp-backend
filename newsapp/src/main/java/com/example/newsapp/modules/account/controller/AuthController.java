@@ -11,7 +11,13 @@ import com.example.newsapp.modules.account.service.AccountService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.*;
 
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -128,6 +134,34 @@ public Map<String, Object> login(@RequestBody LoginReq req) {
     users.save(user);
 
     return Map.of("message", "Password updated successfully");
+  }
+
+  @PostMapping("/upload-avatar")
+  public Map<String, Object> uploadAvatar(@RequestParam Long uid, @RequestParam("file") MultipartFile file) {
+    try {
+        // 1. Tìm User
+        User user = users.findById(uid).orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. Tạo thư mục lưu trữ nếu chưa có (Lưu cục bộ trong thư mục 'uploads')
+        String uploadDir = "uploads/avatars/";
+        Files.createDirectories(Paths.get(uploadDir));
+
+        // 3. Đặt tên file duy nhất (avatar_1.jpg)
+        String fileName = "avatar_" + uid + "_" + System.currentTimeMillis() + ".jpg";
+        Path filePath = Paths.get(uploadDir + fileName);
+
+        // 4. Lưu file vào ổ đĩa
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // 5. Cập nhật đường dẫn vào Database (Lưu URL để App gọi tới)
+        String avatarUrl = "/uploads/avatars/" + fileName;
+        user.setAvatarUrl(avatarUrl);
+        users.save(user);
+
+        return Map.of("avatarUrl", avatarUrl);
+    } catch (Exception e) {
+        throw new RuntimeException("Lỗi lưu file: " + e.getMessage());
+    }
   }
 
   @Data

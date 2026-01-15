@@ -49,50 +49,51 @@ public class AccountService {
   }
 
   public void sendResetPasswordEmail(String email) {
-      User user = userRepository.findByEmail(email)
-              .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
 
-      // Tạo mã 6 số ngẫu nhiên
-      String token = String.valueOf((int)((Math.random() * 899999) + 100000));
-      user.setResetToken(token);
-      user.setTokenExpiry(LocalDateTime.now().plusMinutes(15)); // Hết hạn sau 15p
-      userRepository.save(user);
+    // Tạo mã 6 số ngẫu nhiên
+    String token = String.valueOf((int) ((Math.random() * 899999) + 100000));
+    user.setResetToken(token);
+    user.setTokenExpiry(LocalDateTime.now().plusMinutes(15)); // Hết hạn sau 15p
+    userRepository.save(user);
 
-      // Gửi Mail
-      SimpleMailMessage message = new SimpleMailMessage();
-      message.setTo(email);
-      message.setSubject("Mã xác nhận đặt lại mật khẩu - NewsApp");
-      message.setText("Mã xác nhận của bạn là: " + token + "\nMã có hiệu lực trong 15 phút.");
-      mailSender.send(message);
-    }
-
-    @Transactional
-    public void resetPassword(String email, String token, String newPassword) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
-
-        // Kiểm tra mã OTP
-        if (user.getResetToken() == null || !user.getResetToken().equals(token)) {
-            throw new RuntimeException("Mã xác nhận không đúng");
-        }
-        // Kiểm tra hết hạn
-        if (user.getTokenExpiry().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Mã xác nhận đã hết hạn");
-        }
-
-        // Đổi mật khẩu
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setResetToken(null);
-        user.setTokenExpiry(null);
-        userRepository.save(user);
-    }
+    // Gửi Mail
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setTo(email);
+    message.setSubject("Mã xác nhận đặt lại mật khẩu - NewsApp");
+    message.setText("Mã xác nhận của bạn là: " + token + "\nMã có hiệu lực trong 15 phút.");
+    mailSender.send(message);
+  }
 
   @Transactional
-  public User updateUserInfo(Long userId, String newDisplayName, String newPhoneNumber, String newGender, String newAddress) {
-        
+  public void resetPassword(String email, String token, String newPassword) {
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
+
+    // Kiểm tra mã OTP
+    if (user.getResetToken() == null || !user.getResetToken().equals(token)) {
+      throw new RuntimeException("Mã xác nhận không đúng");
+    }
+    // Kiểm tra hết hạn
+    if (user.getTokenExpiry().isBefore(LocalDateTime.now())) {
+      throw new RuntimeException("Mã xác nhận đã hết hạn");
+    }
+
+    // Đổi mật khẩu
+    user.setPasswordHash(passwordEncoder.encode(newPassword));
+    user.setResetToken(null);
+    user.setTokenExpiry(null);
+    userRepository.save(user);
+  }
+
+  @Transactional
+  public User updateUserInfo(Long userId, String newDisplayName, String newPhoneNumber, String newGender,
+      String newAddress) {
+
     // 1. Tìm người dùng theo ID
     User user = userRepository.findById(userId)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+        .orElseThrow(() -> new RuntimeException("User not found"));
 
     // 2. Cập nhật các trường (Chỉ cập nhật nếu giá trị gửi lên không null)
     if (newDisplayName != null) {
@@ -111,7 +112,8 @@ public class AccountService {
     // 3. Cập nhật thời gian chỉnh sửa cuối cùng
     user.setUpdatedAt(LocalDateTime.now());
 
-    // Nhờ @Transactional, thay đổi sẽ tự động được lưu xuống Database khi kết thúc hàm
+    // Nhờ @Transactional, thay đổi sẽ tự động được lưu xuống Database khi kết thúc
+    // hàm
     return user;
   }
 }
