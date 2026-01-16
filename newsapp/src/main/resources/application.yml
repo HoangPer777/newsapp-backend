@@ -29,7 +29,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-
+google:
+  client-id: 307674059153-9djp3m9qqief5t5q9reslqoddeo4abls.apps.googleusercontent.com
 server:
   port: 8080
 
