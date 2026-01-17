@@ -42,10 +42,22 @@ public class ArticleController {
         return articleService.search(q);
     }
 
+    // ========== LẤY BÀI VIẾT KINH DOANH ==========
+    @GetMapping("/business")
+    public List<Article> getBusinessArticles() {
+        return articleService.getBusinessArticles();
+    }
+
+    // ========== LẤY BÀI VIẾT THẾ GIỚI ==========
+    @GetMapping("/world")
+    public List<Article> getWorldArticles() {
+        return articleService.getWorldArticles();
+    }
+
     // ========== LẤY CHI TIẾT BÀI VIẾT ==========
     @GetMapping("/{value}")
     public ResponseEntity<Article> getArticle(@PathVariable String value) {
-        Article article;
+        Article article;    
         // Nếu là số => tìm theo ID, ngược lại tìm theo slug
         if (value.matches("\\d+")) {
             long id = Long.parseLong(value);
