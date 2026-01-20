@@ -15,9 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.*;
-
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -111,6 +108,39 @@ public Map<String, Object> login(@RequestBody LoginReq req) {
     response.put("avatarUrl", updatedUser.getAvatarUrl());
 
     return response;
+  }
+
+  @PostMapping("/facebook")
+  public Map<String, Object> facebookLogin(@RequestBody Map<String, String> body) {
+    String fbToken = body.get("fbToken");
+    User user = accountService.processFacebookLogin(fbToken);
+    
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("uid", user.getId());
+    claims.put("role", user.getRole().name());
+
+    String token = jwt.generateAccessToken(user.getEmail(), claims);
+
+    return Map.of(
+        "accessToken", token, 
+        "userId", user.getId(), 
+        "role", user.getRole().name()
+    );
+  }
+
+  @PostMapping("/google")
+  public Map<String, Object> googleLogin(@RequestBody Map<String, String> body) throws Exception {
+      String idToken = body.get("idToken");
+      User user = accountService.processGoogleLogin(idToken);
+      Map<String, Object> claims = new HashMap<>();
+      claims.put("uid", user.getId());
+      claims.put("role", user.getRole().name());
+      String myAppToken = jwt.generateAccessToken(user.getEmail(), claims);
+      Map<String, Object> response = new HashMap<>();
+      response.put("accessToken", myAppToken);
+      response.put("userId", user.getId());
+      response.put("role", user.getRole().name());
+      return response;
   }
 
   @PostMapping("/change-password")

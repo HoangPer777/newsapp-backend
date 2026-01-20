@@ -14,9 +14,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import java.util.Collections;
 import com.example.newsapp.modules.account.entity.Role;
+import org.springframework.core.ParameterizedTypeReference;
+import java.util.Map; 
 
 
 // ko dùng nữa chuyển qua xác thực jwt
@@ -56,9 +59,31 @@ public class AccountService {
     return user;
   }
 
-private final String GOOGLE_CLIENT_ID = "307674059153-9djp3m9qqief5t5q9reslqoddeo4abls.apps.googleusercontent.com";
+  public User processFacebookLogin(String fbToken) {
+        // 1. Gọi Graph API của Facebook để lấy thông tin user
+        String fbUrl = "https://graph.facebook.com/me?fields=id,name,email&access_token=" + fbToken;
+        RestTemplate restTemplate = new RestTemplate();
+        Map<String, String> fbRes = restTemplate.getForObject(fbUrl, Map.class);
 
-public User processGoogleLogin(String idTokenString) throws Exception {
+        if (fbRes != null && fbRes.get("email") != null) {
+            String email = fbRes.get("email");
+            String name = fbRes.get("name");
+
+            // 2. Tìm hoặc tạo mới User
+            return userRepository.findByEmail(email).orElseGet(() -> {
+                User newUser = new User(email, "FB_AUTH", name, LocalDateTime.now());
+                newUser.setRole(Role.USER);
+                newUser.setStatus("ACTIVE");
+                return userRepository.save(newUser);
+            });
+        } else {
+            throw new RuntimeException("Xác thực Facebook thất bại");
+        }
+    }
+
+  private final String GOOGLE_CLIENT_ID = "307674059153-9djp3m9qqief5t5q9reslqoddeo4abls.apps.googleusercontent.com";
+
+  public User processGoogleLogin(String idTokenString) throws Exception {
     GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
             .setAudience(Collections.singletonList(GOOGLE_CLIENT_ID))
             .build();
@@ -79,7 +104,7 @@ public User processGoogleLogin(String idTokenString) throws Exception {
     } else {
         throw new RuntimeException("Xác thực Google thất bại");
     }
-}
+  }
 
   public void sendResetPasswordEmail(String email) {
     User user = userRepository.findByEmail(email)
