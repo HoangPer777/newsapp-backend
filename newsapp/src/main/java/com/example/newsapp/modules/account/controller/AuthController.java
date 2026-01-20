@@ -1,7 +1,5 @@
 package com.example.newsapp.modules.account.controller;
 
-import com.example.newsapp.modules.account.controller.AuthController.LoginReq;
-import com.example.newsapp.modules.account.controller.AuthController.RegisterReq;
 import com.example.newsapp.modules.account.entity.User;
 import com.example.newsapp.modules.account.repository.UserRepository;
 import com.example.newsapp.security.JwtService;
@@ -11,11 +9,12 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import com.example.newsapp.modules.account.service.AccountService;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.context.SecurityContextHolder;
-
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,13 +49,7 @@ public class AuthController {
 @PostMapping("/login")
 public Map<String, Object> login(@RequestBody LoginReq req) {
     User user = accountService.loginUser(req.email, req.password);
-
-    // Thêm Role vào Claims của JWT
-    Map<String, Object> claims = new HashMap<>();
-    claims.put("uid", user.getId());
-    claims.put("role", user.getRole().name()); // Thêm dòng này
-
-    String token = jwt.generateAccessToken(user.getEmail(), claims);
+    String token = jwt.generateAccessToken(user.getEmail(), Map.of("uid", user.getId()));
 
     Map<String, Object> response = new HashMap<>();
     response.put("accessToken", token);
@@ -65,11 +58,22 @@ public Map<String, Object> login(@RequestBody LoginReq req) {
     return response;
 }
 
+  @PostMapping("/forgot-password")
+  public Map<String, String> forgotPassword(@RequestBody ForgotPasswordReq req) {
+    accountService.sendResetPasswordEmail(req.email);
+    return Map.of("message", "Mã xác nhận đã được gửi vào Email của bạn");
+  }
+
+  @PostMapping("/reset-password")
+  public Map<String, String> resetPassword(@RequestBody ResetPasswordReq req) {
+    accountService.resetPassword(req.email, req.token, req.newPassword);
+    return Map.of("message", "Đổi mật khẩu thành công!");
+  }
 
   @GetMapping("/me")
   public Map<String, Object> me(@RequestParam Long uid) {
     User u = users.findById(uid)
-                  .orElseThrow(() -> new RuntimeException("User not found with id: " + uid));
+        .orElseThrow(() -> new RuntimeException("User not found with id: " + uid));
 
     Map<String, Object> response = new HashMap<>();
     response.put("id", u.getId());
@@ -79,7 +83,6 @@ public Map<String, Object> login(@RequestBody LoginReq req) {
     response.put("gender", u.getGender());
     response.put("address", u.getAddress());
     response.put("avatarUrl", u.getAvatarUrl());
-    response.put("role", u.getRole().name());
 
     return response;
   }
@@ -92,8 +95,7 @@ public Map<String, Object> login(@RequestBody LoginReq req) {
         req.displayName,
         req.phoneNumber,
         req.gender,
-        req.address
-    );
+        req.address);
 
     // 2. Trả về thông tin đã cập nhật bằng HashMap để an toàn với giá trị null
     Map<String, Object> response = new HashMap<>();
@@ -108,17 +110,49 @@ public Map<String, Object> login(@RequestBody LoginReq req) {
     return response;
   }
 
+  @PostMapping("/facebook")
+  public Map<String, Object> facebookLogin(@RequestBody Map<String, String> body) {
+    String fbToken = body.get("fbToken");
+    User user = accountService.processFacebookLogin(fbToken);
+    
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("uid", user.getId());
+    claims.put("role", user.getRole().name());
+
+    String token = jwt.generateAccessToken(user.getEmail(), claims);
+
+    return Map.of(
+        "accessToken", token, 
+        "userId", user.getId(), 
+        "role", user.getRole().name()
+    );
+  }
+
+  @PostMapping("/google")
+  public Map<String, Object> googleLogin(@RequestBody Map<String, String> body) throws Exception {
+      String idToken = body.get("idToken");
+      User user = accountService.processGoogleLogin(idToken);
+      Map<String, Object> claims = new HashMap<>();
+      claims.put("uid", user.getId());
+      claims.put("role", user.getRole().name());
+      String myAppToken = jwt.generateAccessToken(user.getEmail(), claims);
+      Map<String, Object> response = new HashMap<>();
+      response.put("accessToken", myAppToken);
+      response.put("userId", user.getId());
+      response.put("role", user.getRole().name());
+      return response;
+  }
+
   @PostMapping("/change-password")
   public Map<String, String> changePassword(
-        @RequestParam Long uid,
-        @RequestBody ChangePasswordReq req
-  ) {
+      @RequestParam Long uid,
+      @RequestBody ChangePasswordReq req) {
     User user = users.findById(uid)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+        .orElseThrow(() -> new RuntimeException("User not found"));
 
     // 1. Kiểm tra mật khẩu cũ (Dùng PasswordEncoder để so khớp)
     if (!encoder.matches(req.oldPassword, user.getPasswordHash())) {
-        throw new RuntimeException("Old password is incorrect");
+      throw new RuntimeException("Old password is incorrect");
     }
 
     // 2. Mã hóa mật khẩu mới và cập nhật
@@ -132,7 +166,33 @@ public Map<String, Object> login(@RequestBody LoginReq req) {
     return Map.of("message", "Password updated successfully");
   }
 
+  @PostMapping("/upload-avatar")
+  public Map<String, Object> uploadAvatar(@RequestParam Long uid, @RequestParam("file") MultipartFile file) {
+    try {
+        // 1. Tìm User
+        User user = users.findById(uid).orElseThrow(() -> new RuntimeException("User not found"));
 
+        // 2. Tạo thư mục lưu trữ nếu chưa có (Lưu cục bộ trong thư mục 'uploads')
+        String uploadDir = "uploads/avatars/";
+        Files.createDirectories(Paths.get(uploadDir));
+
+        // 3. Đặt tên file duy nhất (avatar_1.jpg)
+        String fileName = "avatar_" + uid + "_" + System.currentTimeMillis() + ".jpg";
+        Path filePath = Paths.get(uploadDir + fileName);
+
+        // 4. Lưu file vào ổ đĩa
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // 5. Cập nhật đường dẫn vào Database (Lưu URL để App gọi tới)
+        String avatarUrl = "/uploads/avatars/" + fileName;
+        user.setAvatarUrl(avatarUrl);
+        users.save(user);
+
+        return Map.of("avatarUrl", avatarUrl);
+    } catch (Exception e) {
+        throw new RuntimeException("Lỗi lưu file: " + e.getMessage());
+    }
+  }
 
   @Data
   static class RegisterReq {
@@ -150,16 +210,33 @@ public Map<String, Object> login(@RequestBody LoginReq req) {
     @NotBlank
     public String password;
   }
-  @Data static class UpdateUserReq {
+
+  @Data
+  static class UpdateUserReq {
     public String displayName;
     public String phoneNumber;
     public String gender;
     public String address;
   }
+
   @Data
   static class ChangePasswordReq {
     public String oldPassword;
     public String newPassword;
+  }
+
+  @Data
+  static class ResetPasswordReq {
+    public String email;
+    public String token;
+    public String newPassword;
+  }
+
+  @Data
+  static class ForgotPasswordReq {
+    @Email
+    @NotBlank
+    public String email;
   }
 
 }

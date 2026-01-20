@@ -58,6 +58,14 @@ public class ArticleService {
         return articleRepository.findByTitleContainingIgnoreCase(keyword);
     }
 
+    public List<Article> getBusinessArticles() {
+        return articleRepository.findByCategoryOrderByCreatedAtDesc("Kinh doanh");
+    }
+
+    public List<Article> getWorldArticles() {
+        return articleRepository.findByCategoryOrderByCreatedAtDesc("Thế giới");
+    }
+
     public Article getArticleById(Long id) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Article Not Found"));
