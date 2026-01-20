@@ -80,8 +80,7 @@ public class AccountService {
             throw new RuntimeException("Xác thực Facebook thất bại");
         }
     }
-
-  private final String GOOGLE_CLIENT_ID = "307674059153-9djp3m9qqief5t5q9reslqoddeo4abls.apps.googleusercontent.com";
+  private final String GOOGLE_CLIENT_ID = "7797438524-ull6k9kur4dhlv993sg23iod0pnblqik.apps.googleusercontent.com";
 
   public User processGoogleLogin(String idTokenString) throws Exception {
     GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
