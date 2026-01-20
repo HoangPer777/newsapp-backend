@@ -3,6 +3,9 @@ spring:
     name: newsapp
   profiles:
     active: postgres
+  output:
+    ansi:
+      enabled: always
   mail:
     host: smtp.gmail.com
     port: 587
@@ -17,20 +20,24 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-
-
-  # THÊM CÀI ĐẶT DATABASE VÀO ĐÂY
   datasource:
     url: jdbc:postgresql://localhost:5432/newsapp
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
+
+debug: true
+
+app:
+  chatbot:
+    sync-url: http://host.docker.internal:8000/ingest/sync
+
 google:
   client-id: 307674059153-9djp3m9qqief5t5q9reslqoddeo4abls.apps.googleusercontent.com
+
 server:
   port: 8080
 
