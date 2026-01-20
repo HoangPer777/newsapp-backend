@@ -33,7 +33,8 @@ public class ArticleService {
     @Autowired
     private RestTemplate restTemplate; // 2. INJECT RESTTEMPLATE
     @Value("${app.chatbot.sync-url}")
-    private String pythonSyncUrl;    @Autowired private ChatbotService chatbotService; // Inject vào
+    private String pythonSyncUrl;    
+    @Autowired private ChatbotService chatbotService; // Inject vào
 
     public List<Article> getLatestArticles() {
         return articleRepository.findTop20ByOrderByCreatedAtDesc();
