@@ -83,6 +83,7 @@ public Map<String, Object> login(@RequestBody LoginReq req) {
     response.put("gender", u.getGender());
     response.put("address", u.getAddress());
     response.put("avatarUrl", u.getAvatarUrl());
+    response.put("role", u.getRole().name());
 
     return response;
   }
@@ -106,6 +107,7 @@ public Map<String, Object> login(@RequestBody LoginReq req) {
     response.put("gender", updatedUser.getGender());
     response.put("address", updatedUser.getAddress());
     response.put("avatarUrl", updatedUser.getAvatarUrl());
+    response.put("role", updatedUser.getRole().name());
 
     return response;
   }
